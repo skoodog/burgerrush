@@ -55,11 +55,24 @@ async function waitForScene(page: Page, key: string, timeout = 25_000): Promise<
     .toBe(key);
 }
 
+/**
+ * Drives Title -> Arcade Run -> ready -> Stack Phase.
+ *
+ * The ready press is retried rather than fired once: `waitForScene` can observe
+ * a scene during the frame it becomes active but before its input handlers are
+ * wired, so a single keypress is a race. Retrying is deterministic - the scene
+ * only advances when the press is actually accepted.
+ */
 async function startArcadeRun(page: Page): Promise<void> {
   await waitForScene(page, 'Title');
   await page.keyboard.press('Enter'); // Arcade Run
   await waitForScene(page, 'CharacterSelect');
-  await page.keyboard.press('Enter'); // ready
+
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    await page.keyboard.press('Enter'); // ready
+    await page.waitForTimeout(600);
+    if ((await activeScene(page)) === 'StackPhase') return;
+  }
   await waitForScene(page, 'StackPhase');
 }
 

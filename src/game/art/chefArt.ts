@@ -365,6 +365,33 @@ function scarf(s: PaintSurface): void {
 // Head, hair, toque, faces
 // ---------------------------------------------------------------------------
 
+/**
+ * Neck.
+ *
+ * Cut-out rigs need an explicit piece here: the head and torso silhouettes are
+ * both curve-inset from their boxes, so without it the chin and the collar leave
+ * a visible seam whatever the offsets are.
+ */
+function neck(s: PaintSurface): void {
+  const { ctx, w, h } = s;
+  const path = () => roundRectPath(ctx, w * 0.28, h * 0.06, w * 0.44, h * 0.9, w * 0.16);
+  path();
+  ctx.fillStyle = verticalRamp(ctx, 0, h, {
+    top: SKIN.shade,
+    mid: SKIN.mid,
+    shade: SKIN.base,
+  });
+  ctx.fill();
+  ctx.save();
+  path();
+  ctx.clip();
+  // Contact shadow cast by the jaw.
+  ctx.fillStyle = withAlpha('#8a4f2c', 0.45);
+  ctx.fillRect(0, 0, w, h * 0.4);
+  ctx.restore();
+  stroke(ctx, path, KEYLINE * 0.8, INK, 0.7);
+}
+
 function head(s: PaintSurface, presentation: GenderPresentation): void {
   const { ctx, w, h } = s;
   const narrow = presentation === 'girl' ? 0.94 : 1;
@@ -822,6 +849,7 @@ const EXPRESSION_KEYS = Object.keys(EXPRESSIONS) as FaceExpression[];
 export function chefPartSpecs(): PartSpec[] {
   const specs: PartSpec[] = [
     { key: 'chef.torso', w: 22, h: 26, base: torso, accent: torsoAccent },
+    { key: 'chef.neck', w: 12, h: 16, base: neck },
     { key: 'chef.apron', w: 20, h: 26, base: apron },
     { key: 'chef.apronTie', w: 8, h: 14, base: (s) => tail(s, 'apron'), accent: (s) => tail(s, 'apron') },
     { key: 'chef.scarf', w: 16, h: 10, base: () => undefined, accent: scarf },

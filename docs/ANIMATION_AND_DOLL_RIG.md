@@ -60,13 +60,17 @@ hips
 └── legNearUpper ── legNearLower ── footNear
 ```
 
-24 bones, 26 parts, 4 cloth chains. `toque` is the rigid band on the hairline;
+24 bones, 27 parts, 4 cloth chains. `toque` is the rigid band on the hairline;
 `toqueTip` is the soft crown above it, so the hat rocks without the band sliding
 off the head.
 
 Draw order is declared by `CHEF_Z` and sorted once at construction:
-far arm → far leg → back hair → apron → torso → scarf → near leg → near arm →
-head → face → front hair → toque → emblem → held prop.
+far arm → far leg → back hair → apron → torso → neck → scarf → near leg →
+near arm → head → face → front hair → toque → emblem → held prop.
+
+The explicit `neck` part matters: head and torso silhouettes are both
+curve-inset from their texture boxes, so without a piece bridging them the chin
+and the collar leave a visible seam at any offset.
 
 ## 4. One rig, eight visual combinations
 

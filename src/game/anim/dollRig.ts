@@ -188,6 +188,10 @@ export class DollRig {
     this.animator.update(dt, this.context);
     this.updateCloth(dt);
     this.solve();
+    // Triggers are one-step edges. Clearing them here means a scene that pokes
+    // `rig.context.triggers` directly cannot accidentally re-fire a one-shot
+    // every frame; entities repopulate theirs each step regardless.
+    this.context.triggers.clear();
   }
 
   /** World position of a bone-local point, for muzzle flashes and dust puffs. */

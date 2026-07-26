@@ -86,10 +86,10 @@ export class CharacterSelectScene extends Phaser.Scene {
       this.joinPanel(this.panels[0] as Panel);
     }
 
-    this.startText = label(this, VIEW.width / 2, 500, '', 16, UI.goldHi);
-    hintChip(this, 300, 462, '←→', 'SAL / PEP');
-    hintChip(this, 470, 462, '↑↓', 'BOY / GIRL');
-    hintChip(this, 640, 462, '⏎', 'READY');
+    this.startText = label(this, VIEW.width / 2, 524, '', 16, UI.goldHi);
+    hintChip(this, 300, 506, '←→', 'SAL / PEP');
+    hintChip(this, 470, 506, '↑↓', 'BOY / GIRL');
+    hintChip(this, 640, 506, '⏎', 'READY');
 
     this.refreshAll();
   }
@@ -98,17 +98,17 @@ export class CharacterSelectScene extends Phaser.Scene {
     const accent = accentForSlot(slot);
     const color = ACCENT_COLORS[accent];
     const w = this.session.coop ? 380 : 460;
-    const frame = panel(this, x - w / 2, 108, w, 330, accent === 'red' ? '#e0392b' : '#2f6fe0');
+    const frame = panel(this, x - w / 2, 100, w, 320, accent === 'red' ? '#e0392b' : '#2f6fe0');
 
-    slotBadge(this, x - w / 2 + 30, 138, slot, accent, 15);
-    label(this, x - w / 2 + 62, 138, `PLAYER ${slot}`, 15, UI.text).setOrigin(0, 0.5);
+    slotBadge(this, x - w / 2 + 30, 126, slot, accent, 15);
+    label(this, x - w / 2 + 62, 126, `PLAYER ${slot}`, 15, UI.text).setOrigin(0, 0.5);
 
-    const nameText = label(this, x, 380, '', 24, UI.text);
-    const letterText = label(this, x + w / 2 - 40, 138, '', 30, `#${color.toString(16).padStart(6, '0')}`);
-    const presentationText = label(this, x, 408, '', 15, UI.textDim);
-    const blurbText = label(this, x, 432, '', 11, UI.textDim);
-    const deviceText = label(this, x, 172, '', 12, UI.textDim);
-    const statusText = label(this, x, 196, 'PRESS ENTER / SOUTH BUTTON TO JOIN', 13, UI.goldHi);
+    const nameText = label(this, x, 440, '', 24, UI.text);
+    const letterText = label(this, x + w / 2 - 40, 126, '', 30, `#${color.toString(16).padStart(6, '0')}`);
+    const presentationText = label(this, x, 464, '', 15, UI.textDim);
+    const blurbText = label(this, x, 484, '', 11, UI.textDim);
+    const deviceText = label(this, x, 150, '', 12, UI.textDim);
+    const statusText = label(this, x, 172, 'PRESS ENTER / SOUTH BUTTON TO JOIN', 13, UI.goldHi);
 
     return {
       slot,
@@ -133,9 +133,9 @@ export class CharacterSelectScene extends Phaser.Scene {
       identity: selection.identity,
       presentation: selection.presentation,
       slot: panel.slot,
-      scale: this.session.coop ? 2.0 : 2.4,
+      scale: this.session.coop ? 1.9 : 2.1,
     });
-    rig.teleport(panel.x, 372);
+    rig.teleport(panel.x, 398);
     rig.context.triggers.add(CHEF_TRIGGERS.join);
     const view = new DollView(this, rig, { shadow: true });
     view.setDepth(6);

@@ -142,6 +142,7 @@ export function chefSkin(
     // Shared body art, tinted per accent at bake time.
     'chef.torso': `chef.torso.${a}`,
     'chef.apron': 'chef.apron',
+    'chef.neck': 'chef.neck',
     'chef.apronTie': `chef.apronTie.${a}`,
     'chef.scarf': `chef.scarf.${a}`,
     'chef.scarfTail': `chef.scarfTail.${a}`,

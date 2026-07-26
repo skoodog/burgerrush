@@ -49,7 +49,7 @@ Kitchen**, **How To Play**, and the **Doll Lab**.
   machine driven by a gameplay-agnostic blackboard.
 - Spring-driven secondary motion for toque crown, scarf tail, apron ties and
   hair, integrated on the fixed step.
-- Chef rig: 24 bones, 26 parts, 4 cloth chains, 32 clips covering the complete
+- Chef rig: 24 bones, 27 parts, 4 cloth chains, 32 clips covering the complete
   section-17 key set from select idle through the paired final volley.
 - Enemy rig: one shared skeleton, clip library and graph for the whole roster.
 - Accent-mask pipeline producing pixel-aligned P1-red / P2-blue exports from one
