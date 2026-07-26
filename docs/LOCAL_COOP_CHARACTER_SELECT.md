@@ -158,12 +158,12 @@ Create an accent-mask material or equivalent render pass for stripes, toque lett
 
 The production matrix therefore resolves to eight runtime visual combinations:
 
-| Identity | Presentation | P1 red | P2 blue |
-|---|---|---:|---:|
-| Sal | Boy | required | required |
-| Sal | Girl | required | required |
-| Pep | Boy | required | required |
-| Pep | Girl | required | required |
+| Identity | Presentation |   P1 red |  P2 blue |
+| -------- | ------------ | -------: | -------: |
+| Sal      | Boy          | required | required |
+| Sal      | Girl         | required | required |
+| Pep      | Boy          | required | required |
+| Pep      | Girl         | required | required |
 
 Do not duplicate physics or animation state machines for these eight visual combinations.
 
