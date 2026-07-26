@@ -7,6 +7,7 @@
  */
 
 import Phaser from 'phaser';
+import { ART_RES } from '../art/atlas';
 import { TREAD_SEGMENT_W } from '../art/worldArt';
 import { UI, WORLD } from '../art/palette';
 import {
@@ -37,6 +38,16 @@ import { DollView } from '../view/DollView';
 import { backdrop, FONT_STACK, label, slotBadge } from '../ui/theme';
 
 type Phase = 'ready' | 'playing' | 'warning' | 'launching' | 'failed';
+
+declare global {
+  interface Window {
+    __BURGER_RUSH_DEBUG__?: {
+      completeStack: () => void;
+      setTimeRemaining: (seconds: number) => void;
+      state: () => Record<string, unknown>;
+    };
+  }
+}
 
 interface PlayerRuntime {
   readonly slot: PlayerSlot;
@@ -116,7 +127,34 @@ export class StackPhaseScene extends Phaser.Scene {
     this.session.audio.unlock();
     this.session.audio.startStackMusic();
 
+    this.exposeDebugHooks();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
+  }
+
+  /**
+   * Automation hooks for the E2E suite and the attract-mode bot.
+   *
+   * Scripted-cheat completion is explicitly sanctioned by the testing brief so
+   * the boss transition can be exercised without a 60-second play-through. It is
+   * never reachable from gameplay input.
+   */
+  private exposeDebugHooks(): void {
+    window.__BURGER_RUSH_DEBUG__ = {
+      completeStack: () => this.stack.forceCompleteAll(),
+      setTimeRemaining: (seconds: number) => {
+        this.timeRemaining = Math.max(0, seconds);
+        this.timerStarted = true;
+      },
+      state: () => ({
+        phase: this.phase,
+        timeRemaining: this.timeRemaining,
+        burgers: this.stack.completedBurgerCount,
+        segments: this.stack.segmentProgress(),
+        score: this.session.score.score,
+        aprons: this.session.aprons,
+        fieldSpatulas: this.players[0]?.chef.fieldSpatulas ?? 0,
+      }),
+    };
   }
 
   // -------------------------------------------------------------------------
@@ -135,7 +173,7 @@ export class StackPhaseScene extends Phaser.Scene {
           )
           .setOrigin(0.5, 1)
           .setDepth(6);
-        image.setDisplaySize(TREAD_SEGMENT_W + 1, 13);
+        image.setDisplaySize(TREAD_SEGMENT_W + 1, 16);
         sprites.push(image);
       }
       this.layerSprites.set(layer.def.id, sprites);
@@ -199,7 +237,7 @@ export class StackPhaseScene extends Phaser.Scene {
     this.hudHigh = mk(18, 34, 12, UI.textDim);
     this.hudBurgers = mk(210, 16, 15, UI.text);
     this.hudProgress = mk(210, 34, 12, UI.textDim);
-    this.hudCombo = mk(410, 24, 15, UI.goldHi);
+    this.hudCombo = mk(360, 24, 15, UI.goldHi);
 
     this.hudTimer = this.add
       .text(VIEW.width / 2, 22, '60.0', {
@@ -666,7 +704,7 @@ export class StackPhaseScene extends Phaser.Scene {
 
   private spawnPuff(x: number, y: number): void {
     const puff = this.add.image(x, y, 'fx.puff').setDepth(19).setAlpha(0.7);
-    puff.setScale(0.35);
+    puff.setScale((1 / ART_RES) * 1.1);
     this.tweens.add({
       targets: puff,
       alpha: 0,
@@ -685,7 +723,7 @@ export class StackPhaseScene extends Phaser.Scene {
       const key = layer.pressed[i] ? `ingredient.${layer.def.kind}.pressed` : `ingredient.${layer.def.kind}.raw`;
       if (sprite.texture.key !== key) {
         sprite.setTexture(key);
-        sprite.setDisplaySize(TREAD_SEGMENT_W + 1, 13);
+        sprite.setDisplaySize(TREAD_SEGMENT_W + 1, 16);
       }
     });
   }
@@ -787,7 +825,7 @@ export class StackPhaseScene extends Phaser.Scene {
     const g = this.apronGfx;
     g.clear();
     for (let i = 0; i < 3; i += 1) {
-      const x = 410 + i * 22;
+      const x = 614 + i * 22;
       const filled = i < this.session.aprons;
       g.lineStyle(2, 0xf4f1e8, filled ? 1 : 0.35);
       g.fillStyle(0xf4f1e8, filled ? 0.9 : 0.12);

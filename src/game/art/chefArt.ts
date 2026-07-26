@@ -485,26 +485,33 @@ function hairBack(s: PaintSurface, identity: ChefIdentity, presentation: GenderP
   ctx.restore();
 }
 
+/**
+ * Toque crown.
+ *
+ * The pivot sits at the bottom of the box (originY 0.95 in the rig), so the
+ * drawn crown must fill 0.04-0.78 of the height and the hat's own base band
+ * 0.72-0.94. Everything below that is bleed for the keyline.
+ */
 function toque(s: PaintSurface): void {
   const { ctx, w, h } = s;
-  // Puffy crown: three overlapping lobes plus a band.
+  // Puffy crown: three overlapping lobes.
   const crown = () =>
     blobPath(
       ctx,
       [
-        [w * 0.2, h * 0.5],
-        [w * 0.16, h * 0.24],
-        [w * 0.34, h * 0.1],
+        [w * 0.18, h * 0.62],
+        [w * 0.13, h * 0.3],
+        [w * 0.33, h * 0.08],
         [w * 0.5, h * 0.2],
-        [w * 0.66, h * 0.08],
-        [w * 0.84, h * 0.22],
-        [w * 0.8, h * 0.5],
-        [w * 0.5, h * 0.6],
+        [w * 0.67, h * 0.06],
+        [w * 0.87, h * 0.28],
+        [w * 0.82, h * 0.62],
+        [w * 0.5, h * 0.72],
       ],
       0.62,
     );
   crown();
-  ctx.fillStyle = verticalRamp(ctx, 0, h * 0.66, {
+  ctx.fillStyle = verticalRamp(ctx, 0, h * 0.78, {
     top: CLOTH.rim,
     mid: CLOTH.base,
     shade: CLOTH.mid,
@@ -514,20 +521,20 @@ function toque(s: PaintSurface): void {
   ctx.save();
   crown();
   ctx.clip();
-  sheen(ctx, w * 0.34, h * 0.22, w * 0.2, h * 0.1, 0.65);
+  sheen(ctx, w * 0.33, h * 0.24, w * 0.2, h * 0.1, 0.65);
   ctx.strokeStyle = withAlpha(CLOTH.shade, 0.5);
   ctx.lineWidth = 0.5;
   for (const x of [0.36, 0.52, 0.68]) {
     ctx.beginPath();
     ctx.moveTo(w * x, h * 0.16);
-    ctx.quadraticCurveTo(w * (x - 0.02), h * 0.38, w * x, h * 0.56);
+    ctx.quadraticCurveTo(w * (x - 0.02), h * 0.44, w * x, h * 0.66);
     ctx.stroke();
   }
   ctx.restore();
-  // Band
-  const band = () => roundRectPath(ctx, w * 0.18, h * 0.5, w * 0.64, h * 0.22, h * 0.08);
+  // White base band the accent stripe sits on top of.
+  const band = () => roundRectPath(ctx, w * 0.19, h * 0.7, w * 0.62, h * 0.24, h * 0.09);
   band();
-  ctx.fillStyle = verticalRamp(ctx, h * 0.5, h * 0.72, {
+  ctx.fillStyle = verticalRamp(ctx, h * 0.7, h * 0.94, {
     top: CLOTH.base,
     mid: CLOTH.mid,
     shade: CLOTH.shade,
@@ -548,26 +555,32 @@ function toqueBand(s: PaintSurface): void {
   ctx.fill();
 }
 
+/** Emblem backing disc. Base layer, so it stays white in both slot colours. */
+function emblemDisc(s: PaintSurface): void {
+  const { ctx, w, h } = s;
+  const r = Math.min(w, h) * 0.42;
+  ctx.beginPath();
+  ctx.arc(w / 2, h / 2, r, 0, Math.PI * 2);
+  ctx.fillStyle = withAlpha('#ffffff', 0.94);
+  ctx.fill();
+  ctx.lineWidth = 0.6;
+  ctx.strokeStyle = withAlpha(INK, 0.45);
+  ctx.stroke();
+}
+
 /**
- * Toque emblem. Drawn as vector letterforms rather than generated type, and the
- * part is flagged `counterFlip` in the rig so it stays readable facing either
- * way.
+ * Toque emblem letter. Drawn as vector letterforms rather than generated type,
+ * painted into the accent mask so it takes the player-slot colour, and flagged
+ * `counterFlip` in the rig so `S`/`P` stay readable facing either way.
  */
 function emblem(s: PaintSurface, identity: ChefIdentity): void {
   const { ctx, w, h } = s;
   ctx.save();
   ctx.translate(w / 2, h / 2);
   const r = Math.min(w, h) * 0.42;
-  ctx.beginPath();
-  ctx.arc(0, 0, r, 0, Math.PI * 2);
-  ctx.fillStyle = withAlpha('#ffffff', 0.92);
-  ctx.fill();
-  ctx.lineWidth = 0.5;
-  ctx.strokeStyle = withAlpha(INK, 0.5);
-  ctx.stroke();
 
   ctx.fillStyle = MASK.base;
-  ctx.strokeStyle = MASK.shade;
+  ctx.strokeStyle = MASK.base;
   ctx.lineWidth = 1.35;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
@@ -828,8 +841,8 @@ export function chefPartSpecs(): PartSpec[] {
     { key: 'chef.shoe', w: 14, h: 9, base: (s) => shoe(s, false), accent: (s) => shoeTrim(s, false) },
     { key: 'chef.shoeFar', w: 14, h: 9, base: (s) => shoe(s, true), accent: (s) => shoeTrim(s, true) },
 
-    { key: 'chef.toque', w: 30, h: 24, base: toque },
-    { key: 'chef.toqueBand', w: 24, h: 6, base: () => undefined, accent: toqueBand },
+    { key: 'chef.toque', w: 36, h: 30, base: toque },
+    { key: 'chef.toqueBand', w: 26, h: 7, base: () => undefined, accent: toqueBand },
 
     { key: 'prop.spatula', w: 18, h: 8, base: spatula },
     { key: 'prop.whisk', w: 18, h: 8, base: whisk },
@@ -840,7 +853,7 @@ export function chefPartSpecs(): PartSpec[] {
       key: `chef.emblem.${identity}`,
       w: 12,
       h: 12,
-      base: () => undefined,
+      base: emblemDisc,
       accent: (s) => emblem(s, identity),
     });
   }
@@ -859,14 +872,14 @@ export function chefPartSpecs(): PartSpec[] {
       const v = `${identity}.${presentation}`;
       specs.push({
         key: `chef.hairFront.${v}`,
-        w: 24,
-        h: 16,
+        w: 25,
+        h: 14,
         base: (s) => hairFront(s, identity, presentation),
       });
       specs.push({
         key: `chef.hairBack.${v}`,
-        w: 20,
-        h: 26,
+        w: 24,
+        h: 28,
         base: (s) => hairBack(s, identity, presentation),
       });
       for (const expression of EXPRESSION_KEYS) {

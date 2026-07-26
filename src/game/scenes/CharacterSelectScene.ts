@@ -104,8 +104,8 @@ export class CharacterSelectScene extends Phaser.Scene {
     const letterText = label(this, x + w / 2 - 40, 138, '', 30, `#${color.toString(16).padStart(6, '0')}`);
     const presentationText = label(this, x, 408, '', 15, UI.textDim);
     const blurbText = label(this, x, 432, '', 11, UI.textDim);
-    const deviceText = label(this, x, 152, '', 12, UI.textDim);
-    const statusText = label(this, x, 176, 'PRESS ENTER / SOUTH BUTTON TO JOIN', 13, UI.goldHi);
+    const deviceText = label(this, x, 172, '', 12, UI.textDim);
+    const statusText = label(this, x, 196, 'PRESS ENTER / SOUTH BUTTON TO JOIN', 13, UI.goldHi);
 
     return {
       slot,
@@ -130,9 +130,9 @@ export class CharacterSelectScene extends Phaser.Scene {
       identity: selection.identity,
       presentation: selection.presentation,
       slot: panel.slot,
-      scale: this.session.coop ? 2.6 : 3.1,
+      scale: this.session.coop ? 2.0 : 2.4,
     });
-    rig.teleport(panel.x, 362);
+    rig.teleport(panel.x, 372);
     rig.context.triggers.add(CHEF_TRIGGERS.join);
     const view = new DollView(this, rig, { shadow: true });
     view.setDepth(6);

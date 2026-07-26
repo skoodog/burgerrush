@@ -15,6 +15,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
     video: 'off',
     launchOptions: {
+      executablePath: process.env.PW_CHROMIUM_PATH ?? '/opt/pw-browsers/chromium',
       args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--disable-dev-shm-usage'],
     },
   },

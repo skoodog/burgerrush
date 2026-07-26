@@ -8,6 +8,7 @@
  */
 
 import Phaser from 'phaser';
+import { ART_RES } from '../art/atlas';
 import { UI } from '../art/palette';
 import {
   BOSS,
@@ -70,6 +71,14 @@ interface Hazard {
 }
 
 type FlightPhase = 'entering' | 'fighting' | 'defeated';
+
+/**
+ * Textures are painted at ART_RES pixels per world unit, so every non-doll
+ * sprite renders at 1/ART_RES. (DollView applies the same factor internally.)
+ */
+const PX = 1 / ART_RES;
+/** The Dread Stack is a *giant* burger: its parts are authored small and blown up. */
+const BOSS_SCALE = 1.9;
 
 export class BossFlightScene extends Phaser.Scene {
   private session!: Session;
@@ -163,31 +172,31 @@ export class BossFlightScene extends Phaser.Scene {
 
   private buildBoss(): void {
     this.bossContainer = this.add.container(this.bossX, this.bossY).setDepth(15);
-    const bunTop = this.add.image(0, -46, 'boss.bunTop').setOrigin(0.5, 0.5);
-    const bunBottom = this.add.image(0, 52, 'boss.bunBottom').setOrigin(0.5, 0.5);
+    const bunTop = this.add.image(0, -48, 'boss.bunTop').setOrigin(0.5, 0.5).setScale(PX);
+    const bunBottom = this.add.image(0, 52, 'boss.bunBottom').setOrigin(0.5, 0.5).setScale(PX);
     this.bossContainer.add(bunBottom);
 
     this.armourSprites = BOSS.armourLayers.map((kind, i) => {
-      const img = this.add.image(0, 30 - i * 17, `boss.armour.${kind}`).setOrigin(0.5, 0.5);
+      const img = this.add.image(0, 30 - i * 16, `boss.armour.${kind}`).setOrigin(0.5, 0.5).setScale(PX);
       this.bossContainer.add(img);
       return img;
     });
 
     this.bossContainer.add(bunTop);
-    this.bossFace = this.add.image(0, -44, 'boss.face').setOrigin(0.5, 0.5);
+    this.bossFace = this.add.image(0, -44, 'boss.face').setOrigin(0.5, 0.5).setScale(PX);
     this.bossContainer.add(this.bossFace);
 
     // Four clearly separated condiment ports.
     const ports: CondimentFamily[] = ['pickle', 'ketchup', 'mustard', 'mayo'];
     ports.forEach((family, i) => {
       const port = this.add.image(-44, -30 + i * 26, `boss.port.${family}`).setOrigin(0.5, 0.5);
-      port.setScale(0.9);
+      port.setScale(PX * 0.9);
       port.setFlipX(true);
       this.bossContainer.add(port);
       this.bossContainer.setData(`port.${family}`, port);
     });
 
-    this.bossContainer.setScale(1.05);
+    this.bossContainer.setScale(BOSS_SCALE);
   }
 
   private buildChefs(): void {
@@ -234,7 +243,11 @@ export class BossFlightScene extends Phaser.Scene {
 
   private buildPools(): void {
     for (let i = 0; i < FLIGHT.projectilePool; i += 1) {
-      const sprite = this.add.image(-999, -999, 'shot.spatula').setDepth(20).setVisible(false);
+      const sprite = this.add
+        .image(-999, -999, 'shot.spatula')
+        .setDepth(20)
+        .setScale(PX)
+        .setVisible(false);
       this.projectiles.push({
         sprite,
         active: false,
@@ -247,7 +260,11 @@ export class BossFlightScene extends Phaser.Scene {
       });
     }
     for (let i = 0; i < 90; i += 1) {
-      const sprite = this.add.image(-999, -999, 'shot.pickle').setDepth(19).setVisible(false);
+      const sprite = this.add
+        .image(-999, -999, 'shot.pickle')
+        .setDepth(19)
+        .setScale(PX)
+        .setVisible(false);
       this.hazards.push({
         sprite,
         active: false,
@@ -294,7 +311,7 @@ export class BossFlightScene extends Phaser.Scene {
       .setDepth(52);
 
     this.warnIcon = this.add.image(VIEW.width / 2, 74, 'ui.warn.pickle').setDepth(52).setVisible(false);
-    this.warnIcon.setScale(1.6);
+    this.warnIcon.setScale(PX * 1.9);
     this.warnCaption = label(this, VIEW.width / 2, 100, '', 13, UI.goldHi).setDepth(52);
 
     this.players.forEach((player, i) => {
@@ -377,8 +394,11 @@ export class BossFlightScene extends Phaser.Scene {
           chef.x += (targetX - chef.x) * Math.min(1, dt * 6);
           chef.y += (targetY - chef.y) * Math.min(1, dt * 6);
         }
-        // The wing sibling auto-fires whenever the lead fires.
-        chef.firing = lead.chef.firing && player.recoverTimer <= 0;
+        // The wing sibling auto-fires whenever the lead fires. It must go
+        // through the input, not `chef.firing`, or updateFlight would clear it.
+        const wingInput = emptyChefInput();
+        wingInput.fire = lead.chef.firing && player.recoverTimer <= 0;
+        chef.setInput(wingInput);
         chef.update(dt, null);
       } else {
         const state = this.controls.state(player.slot);
@@ -458,7 +478,7 @@ export class BossFlightScene extends Phaser.Scene {
     if (port) {
       this.tweens.add({
         targets: port,
-        scaleX: { from: 0.9, to: 1.2 },
+        scaleX: { from: PX * 0.9, to: PX * 1.2 },
         yoyo: true,
         duration: 140,
         repeat: 2,
@@ -530,7 +550,7 @@ export class BossFlightScene extends Phaser.Scene {
     hazard.sprite.setTexture(`shot.${family}`);
     hazard.sprite.setVisible(true);
     hazard.sprite.setAlpha(0.5 + 0.5 * this.session.accessibility.projectileContrast);
-    hazard.sprite.setScale(family === 'ketchup' ? 1.4 : 1.1);
+    hazard.sprite.setScale(PX * (family === 'ketchup' ? 1.5 : 1.15));
     return hazard;
   }
 
@@ -589,7 +609,7 @@ export class BossFlightScene extends Phaser.Scene {
         h.splits = 0;
         for (const dir of [-1, 1]) {
           const child = this.spawnHazard('mayo', h.x, h.y, h.vx * 0.8, dir * 70, false);
-          if (child) child.sprite.setScale(0.7);
+          if (child) child.sprite.setScale(PX * 0.7);
         }
         this.session.audio.play('mayoShot');
       }
@@ -604,7 +624,7 @@ export class BossFlightScene extends Phaser.Scene {
     // Spatulas vs boss.
     for (const p of this.projectiles) {
       if (!p.active) continue;
-      if (p.x > this.bossX - 78 && Math.abs(p.y - this.bossY) < 92) {
+      if (p.x > this.bossX - 52 * BOSS_SCALE && Math.abs(p.y - this.bossY) < 66 * BOSS_SCALE) {
         p.active = false;
         p.sprite.setVisible(false);
         this.damageBoss(p.slot);
@@ -713,7 +733,7 @@ export class BossFlightScene extends Phaser.Scene {
 
     // Break the boss into harmless ingredient pieces.
     for (let i = 0; i < 22; i += 1) {
-      const piece = this.add.image(this.bossX, this.bossY, 'fx.crumb').setDepth(30);
+      const piece = this.add.image(this.bossX, this.bossY, 'fx.crumb').setDepth(30).setScale(PX);
       this.tweens.add({
         targets: piece,
         x: this.bossX - 120 + Math.random() * 240,

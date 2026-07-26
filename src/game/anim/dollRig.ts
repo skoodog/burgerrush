@@ -225,7 +225,7 @@ export class DollRig {
       const part = this.parts[i] as PartDef;
       const out = this.solvedParts[i] as SolvedPart;
 
-      const resolved = resolveTexture(part.texture, slots, this.skin);
+      const resolved = resolveTexture(part, slots, this.skin);
       out.texture = resolved ?? part.texture;
       out.visible = resolved !== null && resolved !== HIDDEN_TEXTURE;
 
@@ -254,19 +254,26 @@ export class DollRig {
 /** Sentinel a slot can hold to hide its part entirely. */
 export const HIDDEN_TEXTURE = '__none__';
 
+/** Prefix marking a texture key that must be filled by a slot before it draws. */
+const SLOT_PREFIX = 'slot.';
+
 /**
  * Resolution order for a part's texture:
  * 1. runtime slot override (face expression, held prop),
  * 2. skin texture map (variant-specific hair, face, emblem),
  * 3. the literal key authored on the part.
  *
- * Returns `null` when the part should be hidden.
+ * Returns `null` when the part should be hidden - either because a slot is
+ * explicitly cleared, or because the part is slot-driven and nothing has filled
+ * its slot yet. Without that second case an empty hand slot would fall through
+ * to the literal key and render the renderer's missing-texture placeholder.
  */
 function resolveTexture(
-  key: string,
+  part: PartDef,
   slots: ReadonlyMap<string, string>,
   skin: DollSkin,
 ): string | null {
+  const key = part.texture;
   const fromSlot = slots.get(key);
   if (fromSlot !== undefined) {
     if (fromSlot === HIDDEN_TEXTURE) return null;
@@ -274,5 +281,6 @@ function resolveTexture(
   }
   const fromSkin = skin.textures[key];
   if (fromSkin !== undefined) return fromSkin === HIDDEN_TEXTURE ? null : fromSkin;
+  if (key.startsWith(SLOT_PREFIX) || part.hiddenByDefault) return null;
   return key;
 }
