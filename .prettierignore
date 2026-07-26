@@ -1,0 +1,10 @@
+dist
+dev-dist
+node_modules
+coverage
+playwright-report
+test-results
+artifacts
+package-lock.json
+MASTER_PROMPT.md
+BURGER_RUSH_COPY_PASTE_PROMPT.txt

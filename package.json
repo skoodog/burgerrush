@@ -1,0 +1,43 @@
+{
+  "name": "burger-rush",
+  "private": true,
+  "version": "0.3.0",
+  "type": "module",
+  "description": "Burger Rush - original 2.5D arcade burger-assembly platformer with an S&P sibling boss flight. Working title pending clearance.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit -p tsconfig.build.json && vite build",
+    "preview": "vite preview --port 4173",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "validate:maps": "tsx scripts/validate-maps.ts",
+    "simulate:runs": "tsx scripts/simulate-runs.ts",
+    "doll:sheets": "tsx scripts/export-doll-sheets.ts"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^22.10.0",
+    "@types/three": "^0.180.0",
+    "eslint": "^9.39.0",
+    "prettier": "^3.9.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.0",
+    "vite": "^7.3.0",
+    "vite-plugin-pwa": "^1.0.0",
+    "vitest": "^3.2.0"
+  }
+}
