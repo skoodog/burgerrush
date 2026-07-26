@@ -814,6 +814,12 @@ export class BossFlightScene extends Phaser.Scene {
   }
 
   private cleanup(): void {
+    // Explicit scene-lifecycle teardown. The defeat sequence spawns tweened
+    // ingredient debris and port telegraphs that outlive the scene transition
+    // if they are not killed first, and their onComplete handlers then touch a
+    // destroyed display list.
+    this.tweens.killAll();
+    this.time.removeAllEvents();
     for (const player of this.players) player.view.destroy();
     this.players = [];
     this.projectiles = [];

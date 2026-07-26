@@ -42,6 +42,9 @@ export class TitleScene extends Phaser.Scene {
 
   create(): void {
     const session = this.registry.get(SESSION_KEY) as Session;
+    // Phaser does not auto-invoke `shutdown`; wire it so doll views are
+    // released before the display list is torn down.
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.shutdown());
     backdrop(this, VIEW.width, VIEW.height);
 
     heading(this, VIEW.width / 2, 74, 'BURGER RUSH', 62);

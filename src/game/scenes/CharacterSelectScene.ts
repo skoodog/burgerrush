@@ -55,6 +55,9 @@ export class CharacterSelectScene extends Phaser.Scene {
 
   create(): void {
     this.session = this.registry.get(SESSION_KEY) as Session;
+    // Phaser does not auto-invoke `shutdown`; wire it so doll views are
+    // released before the display list is torn down.
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.shutdown());
     this.session.devices.reset();
     for (const selection of this.session.selections) selection.ready = false;
 

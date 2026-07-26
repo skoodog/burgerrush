@@ -31,6 +31,7 @@ export class DollView {
   private shadowImage: Phaser.GameObjects.Image | null = null;
   private debugGfx: Phaser.GameObjects.Graphics | null = null;
   private missingTextures = new Set<string>();
+  private destroyed = false;
 
   constructor(scene: Phaser.Scene, rig: DollRig, options: DollViewOptions = {}) {
     this.scene = scene;
@@ -101,6 +102,7 @@ export class DollView {
    * and the simulation stay decoupled.
    */
   sync(): void {
+    if (this.destroyed) return;
     const rig = this.rig;
     for (let i = 0; i < this.images.length; i += 1) {
       const image = this.images[i] as Phaser.GameObjects.Image;
@@ -139,6 +141,8 @@ export class DollView {
   }
 
   destroy(): void {
+    if (this.destroyed) return;
+    this.destroyed = true;
     for (const image of this.images) image.destroy();
     this.images.length = 0;
     this.shadowImage?.destroy();

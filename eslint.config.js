@@ -12,6 +12,8 @@ export default tseslint.config(
       'test-results/**',
       'public/**',
       'artifacts/**',
+      // Local browser-driving helpers; not part of the shipped program.
+      'tools/**',
     ],
   },
   js.configs.recommended,

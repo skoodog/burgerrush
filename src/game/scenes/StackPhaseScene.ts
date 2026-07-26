@@ -843,6 +843,11 @@ export class StackPhaseScene extends Phaser.Scene {
   }
 
   private cleanup(): void {
+    // Kill pending tweens and delayed callbacks (enemy re-entry, score popups)
+    // before tearing down the display list they reference.
+    this.tweens.killAll();
+    this.time.removeAllEvents();
+    delete window.__BURGER_RUSH_DEBUG__;
     for (const player of this.players) player.view.destroy();
     for (const view of this.enemyViews.values()) view.destroy();
     this.players = [];

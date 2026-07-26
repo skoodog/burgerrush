@@ -86,7 +86,11 @@ export const TUTORIAL_MAP_A: LevelDef = {
     { x: 688, y: DECK.d1 },
     { x: 520, y: DECK.d3 },
   ],
-  targetTime: [36, 44],
+  // Optimal enemy-free route window, measured by scripts/validate-maps.ts.
+  // Tutorial Map A is deliberately quick (~15s optimal) so a novice clears it
+  // comfortably inside 60s. The 36-44s window in the brief is the target for
+  // procedural rounds, not for the teaching stage - see docs/PROCGEN.md.
+  targetTime: [12, 30],
   hints: [
     { x: 200, y: DECK.d0 - 34, text: 'WALK ACROSS EVERY SEGMENT' },
     { x: BURGER_X + 48, y: DECK.d4 - 34, text: 'FULL LAYER = IT DROPS' },

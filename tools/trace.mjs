@@ -1,0 +1,16 @@
+import { chromium } from '@playwright/test';
+const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--use-gl=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage'] });
+const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+page.on('pageerror', e => console.log('PAGEERROR:\n' + (e.stack || e.message)));
+await page.goto('http://127.0.0.1:4173/', { waitUntil: 'load' });
+await page.waitForTimeout(2500);
+await page.keyboard.press('Enter'); await page.waitForTimeout(900);
+await page.keyboard.press('Enter'); await page.waitForTimeout(1800);
+await page.evaluate(() => window.__BURGER_RUSH_DEBUG__?.completeStack());
+await page.waitForFunction(() => window.__BURGER_RUSH__?.game.scene.getScenes(true).some(s=>s.scene.key==='BossFlight'), null, {timeout:30000});
+await page.keyboard.down('KeyX');
+await page.waitForTimeout(8000);
+await page.keyboard.up('KeyX');
+await page.waitForTimeout(1500);
+console.log('scenes', await page.evaluate(() => window.__BURGER_RUSH__?.game.scene.getScenes(true).map(s=>s.scene.key)));
+await browser.close();

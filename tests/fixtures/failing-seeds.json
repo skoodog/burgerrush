@@ -1,0 +1,27 @@
+[
+  {
+    "seed": 1,
+    "check": "routeBudget",
+    "detail": "optimal route 14.9s is trivially short"
+  },
+  {
+    "seed": 2,
+    "check": "routeBudget",
+    "detail": "optimal route 14.9s is trivially short"
+  },
+  {
+    "seed": 3,
+    "check": "routeBudget",
+    "detail": "optimal route 14.9s is trivially short"
+  },
+  {
+    "seed": 4,
+    "check": "routeBudget",
+    "detail": "optimal route 14.9s is trivially short"
+  },
+  {
+    "seed": 5,
+    "check": "routeBudget",
+    "detail": "optimal route 14.9s is trivially short"
+  }
+]
