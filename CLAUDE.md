@@ -35,7 +35,8 @@ The permanent design pillars are:
 
 - Chef Sal (`S`) and Chef Pep (`P`) are the two sibling identities. Each identity has Boy and Girl presentations, and every combination has identical ranked mechanics and validated collision bounds.
 - The S&P initials belong to Sal and Pep; do not create salt or pepper shaker enemies.
-- In local two-player mode, Player 1 is always red in uniform striping/lettering and Player 2 is always blue; color follows player slot, not identity or gender, and is backed by slot number/shape markers.
+- Sal is always red in uniform striping/lettering and Pep is always blue; color follows chef identity, not player slot or gender, and travels with the identity through a character-select swap. Player slots are told apart by slot number and shape markers (P1 diamond, P2 circle), never by color alone.
+- Sal and Pep share body art within a presentation: Pep Girl uses the same head, hair, and face artwork as Sal Girl. Only the toque emblem letter and the uniform accent color distinguish them, which halves the face/hair sheet matrix.
 - Keep chef identity, Boy/Girl presentation, player slot, and input device as separate data.
 - Two gamepads and keyboard-plus-gamepad must join, select, play, disconnect, and rebind without one device controlling both players.
 - Every completed Stack Phase shows the exact warning `BOSS COMING!` with `ボス接近！` beneath it, then launches both chefs through the top boundary.
@@ -82,7 +83,7 @@ A change is not complete until:
 - keyboard, gamepad, and touch input paths remain functional;
 - two-device local co-op maintains isolated player ownership through character select, Stack Phase, boss transition, Boss Flight, results, and reconnect;
 - Sal/Pep identity changes and Boy/Girl changes never alter gameplay values;
-- P1 red and P2 blue accents remain cosmetic and color-independent markers remain visible;
+- Sal red and Pep blue accents remain cosmetic, and color-independent slot markers remain visible;
 - deterministic map and score tests pass;
 - all procedural maps pass reachability and time-budget validation;
 - reduced-motion mode replaces the 3D rotation with an accessible transition;
