@@ -44,4 +44,23 @@ export default tseslint.config(
       'no-console': 'off',
     },
   },
+  {
+    // Dependency-free Node ESM tooling (skoodog-robot). Runs under Node, not in
+    // the browser, and reports to a terminal, so it needs Node globals and
+    // console.
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        URL: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+      },
+    },
+    rules: {
+      'no-console': 'off',
+    },
+  },
 );

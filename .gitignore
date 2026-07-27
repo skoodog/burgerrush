@@ -11,3 +11,6 @@ artifacts/
 .DS_Store
 *.log
 .vite/
+
+# skoodog-robot local state (queued questions, issue log)
+.skoodog-robot/

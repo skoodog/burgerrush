@@ -21,7 +21,8 @@
     "test:e2e": "playwright test",
     "validate:maps": "tsx scripts/validate-maps.ts",
     "simulate:runs": "tsx scripts/simulate-runs.ts",
-    "doll:sheets": "tsx scripts/export-doll-sheets.ts"
+    "doll:sheets": "tsx scripts/export-doll-sheets.ts",
+    "robot": "node scripts/skoodog-robot.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0",
