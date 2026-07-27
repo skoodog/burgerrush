@@ -24,30 +24,35 @@ run (1062 before).
 ## Blocked: the renders cannot enter the repository
 
 All eight renders completed successfully and are listed by the Higgsfield MCP
-tools, but they cannot be fetched. **Outbound HTTP is closed for this session
-generally, not just for the asset host.** Measured, not assumed:
+tools, but they cannot be fetched: **the CDN host serving them is not on this
+session's network egress allowlist.**
 
-| Target                                  | Result             |
-| --------------------------------------- | ------------------ |
-| `d8j0ntlcm91z4.cloudfront.net` (renders) | `403` from the proxy |
-| `api.github.com`                        | `403` from the proxy |
-| `wikipedia.org`                         | `403` from the proxy |
-| `example.com`                           | `403` from the proxy |
+The egress policy states this itself. Its verbatim responses:
 
-`curl` is separately denied at the tool-permission layer, so the proxy's own
-diagnostic endpoint cannot be queried either. The MCP servers still work, which
-is why generation, listing and this repository's commits all succeed while the
-image bytes stay out of reach.
+```
+CONNECT d8j0ntlcm91z4.cloudfront.net:443  ->  HTTP/1.1 403 Forbidden
+                                              request rejected: host not permitted
+
+GET https://example.com/                  ->  403
+    Host not in allowlist: example.com.
+    Add this host to your network egress settings to allow access.
+```
+
+Package registries and `anthropic.com` bypass the proxy entirely (see `noProxy`
+in `curl http://127.0.0.1:42197/__agentproxy/status`), which is why `npm install`
+works. Git reaches the remote through a local git proxy, not `github.com`, which
+is why `git fetch` works. Neither implies general web access.
 
 The consequence is specific and worth stating plainly: **generated art cannot be
-normalized, cropped, alpha-checked, or integrated until outbound egress is
-open.** Nothing about the prompts or the renders is at fault. Until then the game
-continues to ship on the procedural painters in `src/game/art/`, which is why the
-offline fallback path was kept behind stable texture keys.
+normalized, cropped, alpha-checked, or integrated until that host is
+allowlisted.** Nothing about the prompts or the renders is at fault. Until then
+the game continues to ship on the procedural painters in `src/game/art/`, which
+is why the offline fallback path was kept behind stable texture keys.
 
-To unblock, widen the environment's network policy for this session — adding the
-single CDN host is not sufficient, since every host tested is refused — or supply
-the renders through a path that does not require outbound HTTP.
+**To unblock:** add `d8j0ntlcm91z4.cloudfront.net` to the environment's network
+egress settings. A wildcard covering `*.cloudfront.net` also works but is
+broader than needed. Re-verify with the CONNECT probe above — it must return
+`200 Connection established` rather than `403`.
 
 ## Provenance statement
 
