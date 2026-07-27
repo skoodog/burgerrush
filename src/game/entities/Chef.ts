@@ -6,8 +6,8 @@
  * blackboard the animation state machine reads. Nothing in the rig knows about
  * ladders, ingredients or aprons, and nothing in the physics knows about clips.
  *
- * Identity, presentation and player slot are pure skin data, so all eight visual
- * combinations run this exact code path with identical constants.
+ * Identity, presentation and player slot are pure skin data, so every visual
+ * combination runs this exact code path with identical constants.
  */
 
 import { bindClips } from '../anim/clip';
@@ -19,7 +19,6 @@ import { CHEF_CLIPS, CHEF_EVENTS } from '../rigs/chefClips';
 import { CHEF_FLAGS, CHEF_GAMEPLAY_GRAPH, CHEF_TRIGGERS } from '../rigs/chefGraph';
 import { CHEF_MOVE, FLIGHT, STACK_PHASE } from '../config/gameplay';
 import {
-  accentForSlot,
   chefSkin,
   type ChefIdentity,
   type GenderPresentation,
@@ -115,7 +114,7 @@ export class Chef {
       def: CHEF_DOLL,
       graph: CHEF_GAMEPLAY_GRAPH,
       clips: sharedClips(),
-      skin: chefSkin(options.identity, options.presentation, accentForSlot(options.slot)),
+      skin: chefSkin(options.identity, options.presentation),
       ...(options.scale !== undefined ? { scale: options.scale } : {}),
     });
 
@@ -142,7 +141,7 @@ export class Chef {
   setAppearance(identity: ChefIdentity, presentation: GenderPresentation): void {
     this.identity = identity;
     this.presentation = presentation;
-    this.rig.setSkin(chefSkin(identity, presentation, accentForSlot(this.slot)));
+    this.rig.setSkin(chefSkin(identity, presentation));
   }
 
   setFaceExpression(expression: string): void {
