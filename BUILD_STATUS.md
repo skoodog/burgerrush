@@ -14,11 +14,11 @@ projected.
 | --------------------------------------- | ------------------------------------------------------------------ |
 | `npm run lint`                          | exit 0                                                             |
 | `npm run typecheck`                     | exit 0                                                             |
-| `npm test`                              | exit 0 — 78 tests, 2 files                                         |
+| `npm test`                              | exit 0 — 86 tests, 2 files                                         |
 | `npm run test:e2e`                      | exit 0 — 10 specs against the production build                     |
 | `npm run validate:maps -- --count 1000` | exit 0 — 1000 seeds, 0 failures, avg optimal route 14.9s           |
 | `npm run simulate:runs -- --count 200`  | exit 0 — 100% clear, median 11,010, 0.00 avg hits                  |
-| `npm run build`                         | exit 0 — 175.63 kB app (55.22 kB gz) + 1,208 kB Phaser (332 kB gz) |
+| `npm run build`                         | exit 0 — 175.99 kB app (55.21 kB gz) + 1,208 kB Phaser (332 kB gz) |
 
 Browser verification was done with Playwright against `npm run preview`,
 capturing screenshots and asserting an empty console-error list at every stage of
@@ -52,10 +52,23 @@ Kitchen**, **How To Play**, and the **Doll Lab**.
 - Chef rig: 24 bones, 27 parts, 4 cloth chains, 32 clips covering the complete
   section-17 key set from select idle through the paired final volley.
 - Enemy rig: one shared skeleton, clip library and graph for the whole roster.
-- Accent-mask pipeline producing pixel-aligned P1-red / P2-blue exports from one
-  source path.
+- Accent-mask pipeline producing pixel-aligned Sal-red / Pep-blue exports from
+  one source path.
 - Doll Lab: in-game inspection of every clip, variant, accent, expression and
   bone overlay.
+
+### Identity model
+
+Colour follows the **chef**, not the slot: Sal is red, Pep is blue, and the
+accent travels with the identity through a character-select swap. Slots stay
+distinguishable by number and shape (P1 diamond, P2 circle), so nothing depends
+on colour alone. `Session.selection()` re-derives the accent on every read, so it
+cannot drift from the identity.
+
+Sal and Pep also share body art within a presentation — Pep Girl is literally the
+same head, hair and face artwork as Sal Girl, differing only in the toque emblem
+letter and the uniform tint. That halves the face/hair sheet matrix from 32 to 16
+and is asserted by a unit test rather than left as a convention.
 
 ### Art
 
@@ -101,6 +114,7 @@ Stated plainly rather than implied.
 | Touch overlay                                              | Device kind and virtual-axis path exist; no on-screen pad.                                                                                         |
 | Control remapping UI                                       | Device layer supports it; no settings screen.                                                                                                      |
 | High-contrast palette                                      | Flag plumbed and persisted; alternate palette not authored.                                                                                        |
+| Rush Trip runner interlude                                 | **Generator built and validated**; the scene that plays it is not. See below.                                                                      |
 | Attract mode                                               | Not built.                                                                                                                                         |
 | Onion Ringlets, Cheese Creep, Tomato Tumbler, Freezer Burn | Art, rigs and brain parameters exist; they are not placed in a shipping map.                                                                       |
 
@@ -113,8 +127,8 @@ Recorded because they are the evidence the verification was real.
    Slot-driven parts now hide until something fills the slot.
 2. **Toque band across the eyes.** The hat pivot and band offset were wrong. The
    crown now hangs from its own cloth bone above a rigid band on the hairline,
-   and the emblem disc moved to the base layer so only the letter takes the slot
-   colour.
+   and the emblem disc moved to the base layer so only the letter takes the
+   accent colour.
 3. **Boss filling the arena.** Non-doll sprites rendered at raw texture pixels
    instead of world units. The `PX = 1/ART_RES` contract is now applied and
    documented.
@@ -141,10 +155,48 @@ Recorded because they are the evidence the verification was real.
 - Median bot score 11,010 with ~53 seconds remaining. Human play will score
   higher through combo chaining and enemy drops, which the bot never attempts.
 
+## Rush Trip: the runner interlude
+
+`src/game/systems/runnerTrack.ts` generates the surreal mid-round runner as pure
+seeded data, so it validates headlessly like every other system here.
+
+Two fairness bugs were found and fixed during validation, both worth recording
+because they are the kind that only surface under seed sweeps:
+
+1. **The generator could demand an impossible dodge.** Gaps tighten as the trip
+   ramps, and late in a track that could ask for a two-lane change in one-lane
+   time. Candidate open lanes are now filtered to those physically reachable at
+   that group's speed, with a safety margin.
+2. **The validator produced false failures.** The first version assumed a single
+   path and desynchronised from the generator's actual route whenever a group
+   left two lanes open. Reachability is a *set* problem: it now tracks every lane
+   the player could occupy and fails only when that set empties.
+
+300 seeds now pass with zero failures.
+
+What remains is the scene — the morph in, the three-lane runner presentation, the
+morph back with the Stack Phase timer resumed exactly where it was left.
+
 ## External setup
 
-None required. No generation service was called, no credit was spent, and
-`docs/ASSET_LEDGER.md` is empty by design.
+**Blocked on one allowlist entry.** Eight character and boss renders were
+generated on Higgsfield (16 credits, logged in `docs/ASSET_LEDGER.md`) and all
+completed successfully, but the CDN host serving them —
+`d8j0ntlcm91z4.cloudfront.net` — is not on this session's outbound egress
+allowlist. Fetches return `403` from the policy proxy, `WebFetch` included, and
+`curl` is denied at the tool-permission layer. The renders can be listed and
+described through the MCP tools but cannot be downloaded, inspected, or
+integrated.
+
+Until that host is reachable, the game continues to ship on the procedural
+painters in `src/game/art/`. That fallback was kept behind stable texture keys
+precisely so swapping in generated art stays a texture-key change rather than a
+rewrite.
+
+`git push` is also denied at the tool-permission layer in this environment;
+commits reach the branch through the GitHub MCP `push_files` path instead, and
+every transfer is verified byte-identical with `git diff` against the fetched
+remote.
 
 ## Next highest-value improvement
 
