@@ -1,13 +1,16 @@
 /**
  * Chef identity model.
  *
- * Four independent concerns, deliberately never fused into one enum
- * (docs/LOCAL_COOP_CHARACTER_SELECT.md section 2):
+ * Four concerns, deliberately never fused into one enum:
  *
  *   identity     - Sal (`S`) or Pep (`P`); a personality, not a gender
  *   presentation - Boy or Girl; equal variants, identical gameplay
- *   slot         - Player 1 or Player 2
- *   accent       - derived from slot only: P1 red, P2 blue. Never selectable.
+ *   slot         - Player 1 or Player 2; carries number + marker shape
+ *   accent       - derived from identity only: Sal red, Pep blue.
+ *
+ * Sal and Pep share body art within a presentation - Pep Girl is literally the
+ * same artwork as Sal Girl - so the emblem letter and the uniform colour are
+ * what tell them apart.
  */
 
 import type { DollSkin } from '../anim/dollRig';
@@ -26,7 +29,7 @@ export interface PlayerSelection {
   slot: PlayerSlot;
   identity: ChefIdentity;
   presentation: GenderPresentation;
-  /** Derived from `slot`; stored for convenience but never written directly. */
+  /** Derived from `identity`; stored for convenience but never written directly. */
   accent: PlayerAccent;
   inputDeviceId: string | null;
   ready: boolean;
@@ -55,11 +58,20 @@ export const PRESENTATION_META: Readonly<
   girl: { label: 'GIRL', icon: '○' },
 });
 
-/** The one and only place slot colour is decided. */
-export function accentForSlot(slot: PlayerSlot): PlayerAccent {
-  return slot === 1 ? 'red' : 'blue';
+/**
+ * Uniform colour follows the **chef identity**: Sal is red, Pep is blue.
+ *
+ * This is the one and only place that mapping is decided. Because an identity
+ * can be held by only one local player at a time, the two on-screen chefs are
+ * always a red one and a blue one, so co-op still reads at a glance - the
+ * difference is that the colour now tells you *who the character is*, and the
+ * slot number plus marker shape tell you *which player controls them*.
+ */
+export function accentForIdentity(identity: ChefIdentity): PlayerAccent {
+  return identity === 'sal' ? 'red' : 'blue';
 }
 
+/** Non-colour player marker. Slot identity is carried by number and shape. */
 export function markerForSlot(slot: PlayerSlot): SlotMarker {
   return slot === 1 ? 'diamond' : 'circle';
 }
@@ -81,9 +93,9 @@ export const ACCENT_SHADOW_COLORS: Readonly<Record<PlayerAccent | 'neutral', num
 export function createSelection(slot: PlayerSlot, overrides: Partial<PlayerSelection> = {}): PlayerSelection {
   return {
     slot,
-    identity: overrides.identity ?? (slot === 1 ? 'pep' : 'sal'),
+    identity: overrides.identity ?? (slot === 1 ? 'sal' : 'pep'),
     presentation: overrides.presentation ?? (slot === 1 ? 'boy' : 'girl'),
-    accent: accentForSlot(slot),
+    accent: accentForIdentity(overrides.identity ?? (slot === 1 ? 'sal' : 'pep')),
     inputDeviceId: overrides.inputDeviceId ?? null,
     ready: overrides.ready ?? false,
   };
@@ -92,20 +104,27 @@ export function createSelection(slot: PlayerSlot, overrides: Partial<PlayerSelec
 /**
  * Swaps the identities held by two selections.
  *
- * Presentation, device assignment and slot colour are explicitly preserved -
- * acceptance test 6 in the co-op spec.
+ * Presentation and device assignment are explicitly preserved. The uniform
+ * colour follows the identity across the swap, while the slot number and marker
+ * shape stay with the player - so who-controls-whom is never ambiguous.
  */
 export function swapIdentities(a: PlayerSelection, b: PlayerSelection): void {
   const held = a.identity;
   a.identity = b.identity;
   b.identity = held;
-  a.accent = accentForSlot(a.slot);
-  b.accent = accentForSlot(b.slot);
+  // Colour travels with the identity, so a swap swaps the colours too.
+  a.accent = accentForIdentity(a.identity);
+  b.accent = accentForIdentity(b.identity);
 }
 
-/** Texture-key namespace for a variant's art. Keep in sync with the atlas builder. */
-export function variantKey(identity: ChefIdentity, presentation: GenderPresentation): string {
-  return `${identity}.${presentation}`;
+/**
+ * Texture-key namespace for body art.
+ *
+ * Keyed on presentation alone, because Sal and Pep share their head, hair and
+ * face artwork - the letter and the uniform colour carry identity.
+ */
+export function variantKey(presentation: GenderPresentation): string {
+  return presentation;
 }
 
 export type FaceExpression =
@@ -128,16 +147,24 @@ export const FACE_EXPRESSIONS: readonly FaceExpression[] = [
 /**
  * Builds the doll skin for a runtime chef.
  *
- * Only textures change across the eight visual combinations. The skeleton, clip
- * library, state machine and collision bounds are shared by construction.
+ * Two axes, not four:
+ *
+ * - **presentation** (boy/girl) selects the *body art* - head, hair and face.
+ *   Sal and Pep share it exactly: Pep Girl is literally the same artwork as Sal
+ *   Girl. That halves the art matrix and keeps the siblings on-model.
+ * - **identity** (sal/pep) selects the emblem letter and, through
+ *   `accentForIdentity`, the uniform colour: Sal red, Pep blue.
+ *
+ * The skeleton, clip library, state machine and collision bounds are shared by
+ * construction, so every combination plays identically.
  */
 export function chefSkin(
   identity: ChefIdentity,
   presentation: GenderPresentation,
-  accent: PlayerAccent | 'neutral',
+  accentOverride?: PlayerAccent | 'neutral',
 ): DollSkin {
-  const v = variantKey(identity, presentation);
-  const a = accent;
+  const v = presentation;
+  const a = accentOverride ?? accentForIdentity(identity);
   const textures: Record<string, string> = {
     // Shared body art, tinted per accent at bake time.
     'chef.torso': `chef.torso.${a}`,
@@ -162,8 +189,8 @@ export function chefSkin(
     'chef.toqueBand': `chef.toqueBand.${a}`,
     'chef.emblem': `chef.emblem.${identity}.${a}`,
     'chef.head': `chef.head.${presentation}`,
-    'chef.hairBack': `chef.hairBack.${v}`,
-    'chef.hairFront': `chef.hairFront.${v}`,
+    'chef.hairBack': `chef.hairBack.${presentation}`,
+    'chef.hairFront': `chef.hairFront.${presentation}`,
   };
 
   // Face slot entries: the animator swaps `face.<expression>` and the skin maps

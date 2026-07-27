@@ -13,7 +13,6 @@ import { CHEF_DOLL } from '../rigs/chefDoll';
 import { CHEF_CLIPS } from '../rigs/chefClips';
 import { CHEF_GAMEPLAY_GRAPH, CHEF_SELECT_GRAPH } from '../rigs/chefGraph';
 import {
-  accentForSlot,
   chefSkin,
   type ChefIdentity,
   type GenderPresentation,
@@ -41,7 +40,7 @@ export function createChefPreviewRig(options: PreviewOptions): DollRig {
     def: CHEF_DOLL,
     graph: options.graph ?? CHEF_SELECT_GRAPH,
     clips: chefClipLibrary(),
-    skin: chefSkin(options.identity, options.presentation, accentForSlot(options.slot)),
+    skin: chefSkin(options.identity, options.presentation),
     scale: options.scale ?? 2.4,
   });
 }

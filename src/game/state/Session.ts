@@ -7,7 +7,7 @@
 
 import { DEFAULT_ACCESSIBILITY, RUN, type AccessibilitySettings } from '../config/gameplay';
 import {
-  accentForSlot,
+  accentForIdentity,
   createSelection,
   type PlayerSelection,
   type PlayerSlot,
@@ -58,7 +58,7 @@ export class Session {
     this.accessibility = { ...DEFAULT_ACCESSIBILITY, ...this.profile.accessibility };
     this.score.highScore = this.profile.highScore;
     this.rng = new RngStreams(parseSeed(this.seedInput));
-    // Restore last-used identity/presentation; slot colour is always derived.
+    // Restore last-used identity/presentation; accent is always derived.
     const p1 = this.profile.lastSelection?.[0];
     const p2 = this.profile.lastSelection?.[1];
     if (p1) {
@@ -76,8 +76,8 @@ export class Session {
   selection(slot: PlayerSlot): PlayerSelection {
     const found = this.selections.find((s) => s.slot === slot);
     if (!found) throw new Error(`No selection for slot ${slot}`);
-    // Accent is always re-derived so it can never drift from the slot.
-    found.accent = accentForSlot(slot);
+    // Accent is always re-derived so it can never drift from the identity.
+    found.accent = accentForIdentity(found.identity);
     return found;
   }
 
