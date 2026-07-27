@@ -179,16 +179,16 @@ morph back with the Stack Phase timer resumed exactly where it was left.
 
 ## External setup
 
-**Blocked on one allowlist entry.** Eight character and boss renders were
+**Blocked on outbound network egress.** Eight character and boss renders were
 generated on Higgsfield (16 credits, logged in `docs/ASSET_LEDGER.md`) and all
-completed successfully, but the CDN host serving them —
-`d8j0ntlcm91z4.cloudfront.net` — is not on this session's outbound egress
-allowlist. Fetches return `403` from the policy proxy, `WebFetch` included, and
-`curl` is denied at the tool-permission layer. The renders can be listed and
-described through the MCP tools but cannot be downloaded, inspected, or
-integrated.
+completed successfully, but they cannot be fetched: outbound HTTP is closed for
+this session generally, not just for the asset host. The renders' CDN,
+`api.github.com`, `wikipedia.org` and `example.com` all return `403` from the
+policy proxy, and `curl` is separately denied at the tool-permission layer. The
+renders can be listed and described through the MCP tools but cannot be
+downloaded, inspected, or integrated.
 
-Until that host is reachable, the game continues to ship on the procedural
+Until egress is open, the game continues to ship on the procedural
 painters in `src/game/art/`. That fallback was kept behind stable texture keys
 precisely so swapping in generated art stays a texture-key change rather than a
 rewrite.

@@ -23,20 +23,31 @@ run (1062 before).
 
 ## Blocked: the renders cannot enter the repository
 
-All eight renders completed successfully and are visible through the Higgsfield
-MCP tools, but the CDN host they are served from —
-`d8j0ntlcm91z4.cloudfront.net` — is not on this session's outbound egress
-allowlist. Every fetch attempt returns `403` from the policy proxy, including
-through `WebFetch`, and `curl` is denied at the tool-permission layer.
+All eight renders completed successfully and are listed by the Higgsfield MCP
+tools, but they cannot be fetched. **Outbound HTTP is closed for this session
+generally, not just for the asset host.** Measured, not assumed:
+
+| Target                                  | Result             |
+| --------------------------------------- | ------------------ |
+| `d8j0ntlcm91z4.cloudfront.net` (renders) | `403` from the proxy |
+| `api.github.com`                        | `403` from the proxy |
+| `wikipedia.org`                         | `403` from the proxy |
+| `example.com`                           | `403` from the proxy |
+
+`curl` is separately denied at the tool-permission layer, so the proxy's own
+diagnostic endpoint cannot be queried either. The MCP servers still work, which
+is why generation, listing and this repository's commits all succeed while the
+image bytes stay out of reach.
 
 The consequence is specific and worth stating plainly: **generated art cannot be
-normalized, cropped, alpha-checked, or integrated until that host is
-allowlisted.** Nothing about the prompts or the renders is at fault. Until then
-the game continues to ship on the procedural painters in `src/game/art/`, which
-is why the offline fallback path was kept behind stable texture keys.
+normalized, cropped, alpha-checked, or integrated until outbound egress is
+open.** Nothing about the prompts or the renders is at fault. Until then the game
+continues to ship on the procedural painters in `src/game/art/`, which is why the
+offline fallback path was kept behind stable texture keys.
 
-To unblock, add `d8j0ntlcm91z4.cloudfront.net` to the environment's network
-policy, or supply the renders through a reachable path.
+To unblock, widen the environment's network policy for this session — adding the
+single CDN host is not sufficient, since every host tested is refused — or supply
+the renders through a path that does not require outbound HTTP.
 
 ## Provenance statement
 
