@@ -18,7 +18,7 @@ import {
   SCORE,
   VIEW,
 } from '../config/gameplay';
-import { accentForSlot, ACCENT_COLORS, type PlayerSlot } from '../config/identity';
+import { accentForIdentity, ACCENT_COLORS, type PlayerSlot } from '../config/identity';
 import { clamp, clamp01 } from '../core/math';
 import { Chef, emptyChefInput } from '../entities/Chef';
 import { ControlMap } from '../input/ControlMap';
@@ -316,7 +316,7 @@ export class BossFlightScene extends Phaser.Scene {
 
     this.players.forEach((player, i) => {
       if (player.wing && !this.session.coop) return;
-      slotBadge(this, VIEW.width - 200 + i * 40, 23, player.slot, accentForSlot(player.slot), 11).setDepth(52);
+      slotBadge(this, VIEW.width - 200 + i * 40, 23, player.slot, accentForIdentity(player.chef.identity), 11).setDepth(52);
     });
   }
 
@@ -577,7 +577,7 @@ export class BossFlightScene extends Phaser.Scene {
     projectile.slot = player.slot;
     projectile.sprite.setVisible(true);
     // Restrained slot accent - cosmetic only, never a gameplay difference.
-    projectile.sprite.setTint(ACCENT_COLORS[accentForSlot(player.slot)]);
+    projectile.sprite.setTint(ACCENT_COLORS[accentForIdentity(chef.identity)]);
     projectile.sprite.setAlpha(0.95);
   }
 
