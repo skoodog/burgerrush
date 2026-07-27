@@ -14,7 +14,7 @@ import { VIEW } from '../config/gameplay';
 import {
   CHEF_IDENTITIES,
   PRESENTATIONS,
-  accentForSlot,
+  accentForIdentity,
   chefSkin,
   FACE_EXPRESSIONS,
   IDENTITY_META,
@@ -201,7 +201,7 @@ export class DollLabScene extends Phaser.Scene {
         def: CHEF_DOLL,
         graph,
         clips,
-        skin: chefSkin(identity, presentation, accentForSlot(this.slot)),
+        skin: chefSkin(identity, presentation),
         scale: 3.4,
       });
     } else {
@@ -256,7 +256,7 @@ export class DollLabScene extends Phaser.Scene {
       lines.push(`SUBJECT   CHEF`);
       lines.push(`IDENTITY  ${meta.name} (${meta.letter})`);
       lines.push(`PRESENT.  ${this.currentPresentation().toUpperCase()}`);
-      lines.push(`SLOT      P${this.slot} ${accentForSlot(this.slot).toUpperCase()}`);
+      lines.push(`SLOT      P${this.slot}  ·  ${accentForIdentity(this.currentIdentity()).toUpperCase()}`);
       lines.push(`FACE      ${(FACE_EXPRESSIONS[this.expressionIndex] ?? 'neutral').toUpperCase()}`);
     } else {
       lines.push(`SUBJECT   FOOD FOE`);
