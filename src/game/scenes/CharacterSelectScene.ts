@@ -3,7 +3,7 @@
  *
  * Implements the contract in docs/LOCAL_COOP_CHARACTER_SELECT.md:
  * device-scoped join, per-panel identity and presentation choice, an animated
- * swap when a player picks the occupied identity, live red/blue accent preview,
+ * swap when a player picks the occupied identity, live accent preview,
  * independent ready, and colour-independent P1/P2 identification.
  */
 
@@ -14,7 +14,7 @@ import {
   ACCENT_COLORS,
   IDENTITY_META,
   PRESENTATION_META,
-  accentForSlot,
+  accentForIdentity,
   chefSkin,
   swapIdentities,
   type ChefIdentity,
@@ -23,7 +23,7 @@ import {
 } from '../config/identity';
 import { ControlMap } from '../input/ControlMap';
 import { CHEF_TRIGGERS } from '../rigs/chefGraph';
-import type { Session} from '../state/Session';
+import type { Session } from '../state/Session';
 import { SESSION_KEY } from '../state/Session';
 import { DollView } from '../view/DollView';
 import { createChefPreviewRig } from '../view/chefDollFactory';
@@ -95,7 +95,7 @@ export class CharacterSelectScene extends Phaser.Scene {
   }
 
   private buildPanel(slot: PlayerSlot, x: number): Panel {
-    const accent = accentForSlot(slot);
+    const accent = accentForIdentity(slot === 1 ? 'sal' : 'pep');
     const color = ACCENT_COLORS[accent];
     const w = this.session.coop ? 380 : 460;
     const frame = panel(this, x - w / 2, 100, w, 320, accent === 'red' ? '#e0392b' : '#2f6fe0');
@@ -104,7 +104,14 @@ export class CharacterSelectScene extends Phaser.Scene {
     label(this, x - w / 2 + 62, 126, `PLAYER ${slot}`, 15, UI.text).setOrigin(0, 0.5);
 
     const nameText = label(this, x, 440, '', 24, UI.text);
-    const letterText = label(this, x + w / 2 - 40, 126, '', 30, `#${color.toString(16).padStart(6, '0')}`);
+    const letterText = label(
+      this,
+      x + w / 2 - 40,
+      126,
+      '',
+      30,
+      `#${color.toString(16).padStart(6, '0')}`,
+    );
     const presentationText = label(this, x, 464, '', 15, UI.textDim);
     const blurbText = label(this, x, 484, '', 11, UI.textDim);
     const deviceText = label(this, x, 150, '', 12, UI.textDim);
@@ -148,8 +155,8 @@ export class CharacterSelectScene extends Phaser.Scene {
     const selection = this.session.selection(panel.slot);
     if (selection.identity === identity) return;
 
-    // Occupied identity -> animated swap that preserves presentation, device and
-    // slot colour for both players (co-op acceptance test 6).
+    // Occupied identity -> animated swap that preserves presentation and device
+    // for both players. The uniform colour travels with the identity.
     const other = this.panels.find(
       (p) => p !== panel && p.joined && this.session.selection(p.slot).identity === identity,
     );
@@ -179,9 +186,7 @@ export class CharacterSelectScene extends Phaser.Scene {
 
   private applySkin(panel: Panel): void {
     const selection = this.session.selection(panel.slot);
-    panel.view?.rig.setSkin(
-      chefSkin(selection.identity, selection.presentation, accentForSlot(panel.slot)),
-    );
+    panel.view?.rig.setSkin(chefSkin(selection.identity, selection.presentation));
   }
 
   private toggleReady(panel: Panel): void {
@@ -196,7 +201,7 @@ export class CharacterSelectScene extends Phaser.Scene {
     for (const panel of this.panels) {
       const selection = this.session.selection(panel.slot);
       const meta = IDENTITY_META[selection.identity];
-      const accent = accentForSlot(panel.slot);
+      const accent = accentForIdentity(selection.identity);
       panel.nameText.setText(panel.joined ? meta.name.toUpperCase() : '');
       panel.letterText.setText(panel.joined ? meta.letter : '');
       panel.blurbText.setText(panel.joined ? meta.blurb : '');
@@ -219,9 +224,15 @@ export class CharacterSelectScene extends Phaser.Scene {
     }
 
     const joined = this.panels.filter((p) => p.joined);
-    const allReady = joined.length === this.panels.length && joined.every((p) => this.session.selection(p.slot).ready);
+    const allReady =
+      joined.length === this.panels.length &&
+      joined.every((p) => this.session.selection(p.slot).ready);
     this.startText.setText(
-      allReady ? 'ALL READY — PRESS START' : this.session.coop ? 'BOTH PLAYERS MUST JOIN AND READY UP' : '',
+      allReady
+        ? 'ALL READY — PRESS START'
+        : this.session.coop
+          ? 'BOTH PLAYERS MUST JOIN AND READY UP'
+          : '',
     );
     if (allReady) this.startRun();
   }
