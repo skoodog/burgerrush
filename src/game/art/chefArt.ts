@@ -423,9 +423,9 @@ function head(s: PaintSurface, presentation: GenderPresentation): void {
   stroke(ctx, path, KEYLINE);
 }
 
-function hairFront(s: PaintSurface, identity: ChefIdentity, presentation: GenderPresentation): void {
+function hairFront(s: PaintSurface, presentation: GenderPresentation): void {
   const { ctx, w, h } = s;
-  const spiky = identity === 'pep';
+  const spiky = presentation === 'boy';
   const pts: [number, number][] = spiky
     ? [
         [w * 0.5, h * 0.06],
@@ -459,7 +459,7 @@ function hairFront(s: PaintSurface, identity: ChefIdentity, presentation: Gender
   ctx.restore();
 }
 
-function hairBack(s: PaintSurface, identity: ChefIdentity, presentation: GenderPresentation): void {
+function hairBack(s: PaintSurface, presentation: GenderPresentation): void {
   const { ctx, w, h } = s;
   ctx.save();
   if (presentation === 'girl') {
@@ -499,7 +499,7 @@ function hairBack(s: PaintSurface, identity: ChefIdentity, presentation: GenderP
     });
     ctx.fill();
     stroke(ctx, path, KEYLINE * 0.9);
-    if (identity === 'pep') {
+    {
       // Cowlick tuft
       ctx.beginPath();
       ctx.moveTo(w * 0.66, h * 0.12);
@@ -654,16 +654,14 @@ const EXPRESSIONS: Readonly<Record<FaceExpression, EyeShape>> = Object.freeze({
 
 function face(
   s: PaintSurface,
-  identity: ChefIdentity,
   presentation: GenderPresentation,
   expression: FaceExpression,
 ): void {
   const { ctx, w, h } = s;
   const e = EXPRESSIONS[expression];
   const lashes = presentation === 'girl';
-  // Sal's eyes sit slightly narrower (composed); Pep's rounder (enthusiastic).
-  const eyeRx = (identity === 'sal' ? 0.115 : 0.128) * w;
-  const eyeRy = eyeRx * (identity === 'sal' ? 1.12 : 1.24) * e.openness;
+  const eyeRx = 0.124 * w;
+  const eyeRy = eyeRx * 1.18 * e.openness;
 
   const drawEye = (cx: number, scale: number): void => {
     const cy = h * 0.48;
@@ -895,29 +893,28 @@ export function chefPartSpecs(): PartSpec[] {
     });
   }
 
-  for (const identity of IDENTITIES) {
-    for (const presentation of PRESENTATIONS) {
-      const v = `${identity}.${presentation}`;
+  // Body art is keyed by presentation alone: Sal and Pep share it exactly, and
+  // are told apart by the toque letter and the uniform accent colour.
+  for (const presentation of PRESENTATIONS) {
+    specs.push({
+      key: `chef.hairFront.${presentation}`,
+      w: 25,
+      h: 14,
+      base: (s) => hairFront(s, presentation),
+    });
+    specs.push({
+      key: `chef.hairBack.${presentation}`,
+      w: 24,
+      h: 28,
+      base: (s) => hairBack(s, presentation),
+    });
+    for (const expression of EXPRESSION_KEYS) {
       specs.push({
-        key: `chef.hairFront.${v}`,
-        w: 25,
+        key: `chef.face.${presentation}.${expression}`,
+        w: 16,
         h: 14,
-        base: (s) => hairFront(s, identity, presentation),
+        base: (s) => face(s, presentation, expression),
       });
-      specs.push({
-        key: `chef.hairBack.${v}`,
-        w: 24,
-        h: 28,
-        base: (s) => hairBack(s, identity, presentation),
-      });
-      for (const expression of EXPRESSION_KEYS) {
-        specs.push({
-          key: `chef.face.${v}.${expression}`,
-          w: 16,
-          h: 14,
-          base: (s) => face(s, identity, presentation, expression),
-        });
-      }
     }
   }
 
