@@ -17,7 +17,8 @@
  */
 
 import { TREAD_SEGMENT_W, INGREDIENT_H } from '../art/worldArt';
-import type { IngredientLayerDef, LevelDef, PlateDef } from '../levels/types';
+import type { Face, IngredientLayerDef, LevelDef, PlateDef } from '../levels/types';
+import { faceOf } from '../levels/types';
 
 export type LayerState = 'resting' | 'armed' | 'falling' | 'landed';
 
@@ -289,15 +290,29 @@ export interface SurfaceQuery {
   readonly layerId: string | null;
 }
 
-export function collectSurfaces(level: LevelDef, stack: BurgerStack): SurfaceQuery[] {
-  const surfaces: SurfaceQuery[] = level.platforms.map((p) => ({
-    y: p.y,
-    x1: p.x1,
-    x2: p.x2,
-    layerId: null,
-  }));
+/**
+ * Standable surfaces on one face.
+ *
+ * `face` defaults to the front so every single-face map and every existing
+ * caller behaves exactly as before. On a two-face map this filter is what stops
+ * a chef on the front from landing on a platform that is physically behind them.
+ */
+export function collectSurfaces(
+  level: LevelDef,
+  stack: BurgerStack,
+  face: Face = 0,
+): SurfaceQuery[] {
+  const surfaces: SurfaceQuery[] = level.platforms
+    .filter((p) => faceOf(p) === face)
+    .map((p) => ({
+      y: p.y,
+      x1: p.x1,
+      x2: p.x2,
+      layerId: null,
+    }));
   for (const layer of stack.layers.values()) {
     if (layer.state === 'falling') continue;
+    if (faceOf(layer.def) !== face) continue;
     surfaces.push({
       y: layer.y,
       x1: layer.def.x,
