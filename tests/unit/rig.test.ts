@@ -328,7 +328,7 @@ describe('chef rig integration', () => {
       def: CHEF_DOLL,
       graph: CHEF_GAMEPLAY_GRAPH,
       clips: bindClips(CHEF_CLIPS, new Skeleton(CHEF_DOLL.skeleton)),
-      skin: chefSkin('sal', 'girl', 'red'),
+      skin: chefSkin('sal', 'girl'),
     });
 
   it('binds every authored clip and graph without error', () => {
@@ -337,7 +337,7 @@ describe('chef rig integration', () => {
       def: CHEF_DOLL,
       graph: CHEF_SELECT_GRAPH,
       clips: bindClips(CHEF_CLIPS, new Skeleton(CHEF_DOLL.skeleton)),
-      skin: chefSkin('pep', 'boy', 'blue'),
+      skin: chefSkin('pep', 'boy'),
     });
     expect(selectRig.animator.stateId).toBe('selectIdle');
   });
@@ -368,12 +368,10 @@ describe('chef rig integration', () => {
     const rig = makeRig();
     rig.update(1 / 120);
     const face = rig.solvedParts.find((p) => p.partId === 'face');
-    expect(face?.texture).toBe('chef.face.sal.girl.neutral');
+    expect(face?.texture).toBe('chef.face.girl.neutral');
     rig.animator.setSlot('slot.face', 'face.hurt');
     rig.update(1 / 120);
-    expect(rig.solvedParts.find((p) => p.partId === 'face')?.texture).toBe(
-      'chef.face.sal.girl.hurt',
-    );
+    expect(rig.solvedParts.find((p) => p.partId === 'face')?.texture).toBe('chef.face.girl.hurt');
   });
 
   it('keeps the toque emblem un-mirrored when facing left', () => {
