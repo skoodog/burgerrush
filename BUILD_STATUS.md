@@ -14,11 +14,12 @@ projected.
 | --------------------------------------- | ------------------------------------------------------------------ |
 | `npm run lint`                          | exit 0                                                             |
 | `npm run typecheck`                     | exit 0                                                             |
-| `npm test`                              | exit 0 — 86 tests, 2 files                                         |
+| `npm test`                              | exit 0 — 104 tests, 3 files                                        |
 | `npm run test:e2e`                      | exit 0 — 10 specs against the production build                     |
 | `npm run validate:maps -- --count 1000` | exit 0 — 1000 seeds, 0 failures, avg optimal route 14.9s           |
 | `npm run simulate:runs -- --count 200`  | exit 0 — 100% clear, median 11,010, 0.00 avg hits                  |
 | `npm run build`                         | exit 0 — 175.99 kB app (55.21 kB gz) + 1,208 kB Phaser (332 kB gz) |
+| `npm run robot -- doctor`               | exit 2 — correctly reports transport blocked (see External setup)  |
 
 Browser verification was done with Playwright against `npm run preview`,
 capturing screenshots and asserting an empty console-error list at every stage of
@@ -98,6 +99,17 @@ and is asserted by a unit test rather than left as a convention.
   alternation, adaptive four-layer music, all mechanical and boss cues.
 - Accessibility: colour-independent identification, reduced motion, screen-shake
   slider, numeric boss health, auto-fire, captions, readable timer scale.
+
+### Tooling
+
+- **skoodog-robot** (`.claude/agents/skoodog-robot.md`,
+  `scripts/skoodog-robot.mjs`): escalates blockers whose cause is outside this
+  repository to the Higgsfield Discord and brings answers back. Dependency-free,
+  REST-only, with a hand-rolled CONNECT tunnel. `doctor` probes transport,
+  identity and channel access separately so a failure names the broken layer.
+  Questions queue locally when the network is closed, so the caller is never
+  blocked. Answers are treated as untrusted hypotheses that must be tested
+  before use. See `docs/EXTERNAL_SETUP.md`.
 
 ## Not implemented
 
@@ -179,21 +191,31 @@ morph back with the Stack Phase timer resumed exactly where it was left.
 
 ## External setup
 
-**Blocked on outbound network egress.** Eight character and boss renders were
-generated on Higgsfield (16 credits, logged in `docs/ASSET_LEDGER.md`) and all
-completed successfully, but they cannot be fetched: outbound HTTP is closed for
-this session generally, not just for the asset host. The renders' CDN,
-`api.github.com`, `wikipedia.org` and `example.com` all return `403` from the
-policy proxy, and `curl` is separately denied at the tool-permission layer. The
-renders can be listed and described through the MCP tools but cannot be
-downloaded, inspected, or integrated.
+**Blocked on network egress allowlist entries.** Eight character and boss renders
+were generated on Higgsfield (16 credits, logged in `docs/ASSET_LEDGER.md`) and
+all completed successfully, but they cannot be fetched. The egress policy is a
+per-host allowlist, and it says so itself: a CONNECT to the asset CDN returns
+`request rejected: host not permitted`, and a plain request returns `Host not in
+allowlist: <host>. Add this host to your network egress settings to allow
+access.`
 
-Until egress is open, the game continues to ship on the procedural
+Two entries are wanted:
+
+| Host                            | Unblocks                                  |
+| ------------------------------- | ----------------------------------------- |
+| `d8j0ntlcm91z4.cloudfront.net`  | downloading the generated art             |
+| `discord.com`                   | skoodog-robot's escalation bridge         |
+
+Note that `npm install` and `git fetch` working proves nothing about general
+access: package registries bypass the proxy entirely, and git reaches the remote
+through a local git proxy rather than `github.com`.
+
+Until the CDN host is allowlisted, the game continues to ship on the procedural
 painters in `src/game/art/`. That fallback was kept behind stable texture keys
 precisely so swapping in generated art stays a texture-key change rather than a
 rewrite.
 
-`git push` is also denied at the tool-permission layer in this environment;
+`git push` is separately denied at the tool-permission layer in this environment;
 commits reach the branch through the GitHub MCP `push_files` path instead, and
 every transfer is verified byte-identical with `git diff` against the fetched
 remote.
