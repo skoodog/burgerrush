@@ -19,7 +19,7 @@ import {
   STACK_PHASE,
   VIEW,
 } from '../config/gameplay';
-import { accentForSlot, ACCENT_COLORS, markerForSlot, type PlayerSlot } from '../config/identity';
+import { accentForIdentity, ACCENT_COLORS, markerForSlot, type PlayerSlot } from '../config/identity';
 import { clamp, clamp01 } from '../core/math';
 import { Chef, emptyChefInput } from '../entities/Chef';
 import { Enemy } from '../entities/Enemy';
@@ -253,7 +253,7 @@ export class StackPhaseScene extends Phaser.Scene {
 
     // Persistent P1/P2 markers: number, letter, shape and colour.
     this.players.forEach((player, i) => {
-      const accent = accentForSlot(player.slot);
+      const accent = accentForIdentity(player.chef.identity);
       slotBadge(this, VIEW.width - 150 + i * 70, 23, player.slot, accent, 12).setDepth(52);
       this.add
         .text(VIEW.width - 132 + i * 70, 23, markerForSlot(player.slot) === 'diamond' ? '◆' : '●', {
