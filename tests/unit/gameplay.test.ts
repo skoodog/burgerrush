@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { BOSS_WARNING_TEXT, CHEF_MOVE, FLIGHT, RUN, SCORE, STACK_PHASE } from '@/game/config/gameplay';
 import {
-  accentForSlot,
+  accentForIdentity,
   chefSkin,
   createSelection,
   markerForSlot,
@@ -31,25 +31,44 @@ import {
   type LeaderboardEntry,
 } from '@/game/state/persistence';
 import { InputDeviceRegistry } from '@/game/input/InputDeviceRegistry';
+import {
+  buildRunnerTrack,
+  runnerSpeedAt,
+  validateRunnerTrack,
+  RUNNER_BASE_SPEED,
+  RUNNER_MAX_SPEED,
+} from '@/game/systems/runnerTrack';
 
 describe('chef identity model', () => {
-  it('derives accent from slot only', () => {
-    expect(accentForSlot(1)).toBe('red');
-    expect(accentForSlot(2)).toBe('blue');
+  it('derives accent from identity only: Sal red, Pep blue', () => {
+    expect(accentForIdentity('sal')).toBe('red');
+    expect(accentForIdentity('pep')).toBe('blue');
     expect(markerForSlot(1)).toBe('diamond');
     expect(markerForSlot(2)).toBe('circle');
   });
 
-  it('keeps Player 1 red and Player 2 blue across every identity/presentation', () => {
-    for (const identity of CHEF_IDENTITIES) {
-      for (const presentation of PRESENTATIONS) {
-        expect(chefSkin(identity, presentation, accentForSlot(1)).accent).toBe('red');
-        expect(chefSkin(identity, presentation, accentForSlot(2)).accent).toBe('blue');
-      }
+  it('keeps Sal red and Pep blue in either presentation and either slot', () => {
+    for (const presentation of PRESENTATIONS) {
+      expect(chefSkin('sal', presentation).accent).toBe('red');
+      expect(chefSkin('pep', presentation).accent).toBe('blue');
     }
   });
 
-  it('swaps identities without touching presentation, device or slot colour', () => {
+  it('gives Sal and Pep identical body art within a presentation', () => {
+    for (const presentation of PRESENTATIONS) {
+      const sal = chefSkin('sal', presentation).textures;
+      const pep = chefSkin('pep', presentation).textures;
+      // Head, hair and face are literally the same artwork.
+      for (const key of ['chef.head', 'chef.hairBack', 'chef.hairFront', 'face.neutral']) {
+        expect(pep[key]).toBe(sal[key]);
+      }
+      // Only the emblem letter and the accent colour differ.
+      expect(pep['chef.emblem']).not.toBe(sal['chef.emblem']);
+      expect(pep['chef.torso']).not.toBe(sal['chef.torso']);
+    }
+  });
+
+  it('swaps identities, carrying colour with them but never the device or presentation', () => {
     const p1: PlayerSelection = createSelection(1, {
       identity: 'sal',
       presentation: 'boy',
@@ -67,15 +86,18 @@ describe('chef identity model', () => {
     expect(p2.presentation).toBe('boy');
     expect(p1.inputDeviceId).toBe('keyboard');
     expect(p2.inputDeviceId).toBe('gamepad-1');
-    expect(p1.accent).toBe('red');
-    expect(p2.accent).toBe('blue');
+    // Colour follows the identity across the swap.
+    expect(p1.accent).toBe('blue');
+    expect(p2.accent).toBe('red');
   });
 
-  it('lets both players choose the same presentation', () => {
-    const p1 = createSelection(1, { presentation: 'girl' });
-    const p2 = createSelection(2, { presentation: 'girl' });
+  it('lets both players choose the same presentation and still reads apart', () => {
+    const p1 = createSelection(1, { identity: 'sal', presentation: 'girl' });
+    const p2 = createSelection(2, { identity: 'pep', presentation: 'girl' });
     expect(p1.presentation).toBe(p2.presentation);
+    // Pep Girl is the same artwork as Sal Girl, so colour and marker carry it.
     expect(p1.accent).not.toBe(p2.accent);
+    expect(markerForSlot(p1.slot)).not.toBe(markerForSlot(p2.slot));
   });
 
   it('gives all eight visual combinations identical collision bounds', () => {
@@ -507,6 +529,74 @@ describe('published contract values', () => {
       expect(name).not.toMatch(/shaker/);
       expect(name).not.toMatch(/\bsalt\b/);
       expect(name).not.toMatch(/\bpepper\b/);
+    }
+  });
+});
+
+describe('surreal runner interlude track', () => {
+  it('is deterministic for a seed', () => {
+    const a = buildRunnerTrack(1234);
+    const b = buildRunnerTrack(1234);
+    expect(a.pieces).toEqual(b.pieces);
+    expect(a.durationSeconds).toBeCloseTo(b.durationSeconds, 9);
+  });
+
+  it('differs between seeds', () => {
+    expect(buildRunnerTrack(1).pieces).not.toEqual(buildRunnerTrack(2).pieces);
+  });
+
+  it('never blocks every lane, across many seeds', () => {
+    for (let seed = 1; seed <= 300; seed += 1) {
+      const track = buildRunnerTrack(seed);
+      const result = validateRunnerTrack(track);
+      expect(result.failures).toEqual([]);
+      expect(result.ok).toBe(true);
+    }
+  });
+
+  it('always terminates with an exit portal past the end', () => {
+    for (let seed = 1; seed <= 50; seed += 1) {
+      const track = buildRunnerTrack(seed);
+      const portals = track.pieces.filter((p) => p.kind === 'portal');
+      expect(portals).toHaveLength(1);
+      expect(portals[0]?.x).toBeGreaterThan(track.length);
+    }
+  });
+
+  it('ramps speed monotonically and stays inside its bounds', () => {
+    let previous = 0;
+    for (let i = 0; i <= 20; i += 1) {
+      const speed = runnerSpeedAt(i / 20);
+      expect(speed).toBeGreaterThanOrEqual(previous);
+      expect(speed).toBeGreaterThanOrEqual(RUNNER_BASE_SPEED);
+      expect(speed).toBeLessThanOrEqual(RUNNER_MAX_SPEED);
+      previous = speed;
+    }
+    expect(runnerSpeedAt(-5)).toBe(RUNNER_BASE_SPEED);
+    expect(runnerSpeedAt(9)).toBe(RUNNER_MAX_SPEED);
+  });
+
+  it('lasts long enough to read as its own mode but stays a flourish', () => {
+    const track = buildRunnerTrack(7);
+    expect(track.durationSeconds).toBeGreaterThan(10);
+    expect(track.durationSeconds).toBeLessThan(30);
+  });
+
+  it('rewards the open lane with a collectible in every group', () => {
+    const track = buildRunnerTrack(99);
+    const blockedAt = new Map<number, Set<number>>();
+    for (const p of track.pieces) {
+      if (p.kind === 'collectible' || p.kind === 'portal') continue;
+      const key = Math.round(p.x);
+      const set = blockedAt.get(key) ?? new Set<number>();
+      set.add(p.lane);
+      blockedAt.set(key, set);
+    }
+    for (const [x, blocked] of blockedAt) {
+      const pickup = track.pieces.find(
+        (p) => p.kind === 'collectible' && Math.round(p.x) === x && !blocked.has(p.lane),
+      );
+      expect(pickup, `no reward in the open lane at ${x}`).toBeDefined();
     }
   });
 });
